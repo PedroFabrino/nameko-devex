@@ -35,6 +35,15 @@ class StorageWrapper:
             'maximum_speed': int(document[b'maximum_speed']),
             'in_stock': int(document[b'in_stock'])
         }
+    
+    def _from_hash_decoded(self, document):
+        return {
+            'id': document['id'].decode('utf-8'),
+            'title': document['title'].decode('utf-8'),
+            'passenger_capacity': int(document['passenger_capacity']) if document.get('passenger_capacity') else None,
+            'maximum_speed': int(document['maximum_speed']) if document.get('maximum_speed') else None,
+            'in_stock': int(document['in_stock']) if document.get('in_stock') else None
+        }
 
     def get(self, product_id):
         product = self.client.hgetall(self._format_key(product_id))
@@ -42,6 +51,14 @@ class StorageWrapper:
             raise NotFound('Product ID {} does not exist'.format(product_id))
         else:
             return self._from_hash(product)
+
+    def filter_by_ids(self, product_ids):
+        for product_id in product_ids:
+            try:
+                product = self.get(product_id)
+                yield product
+            except NotFound:
+                continue
 
     def list(self):
         keys = self.client.keys(self._format_key('*'))
@@ -56,6 +73,9 @@ class StorageWrapper:
     def decrement_stock(self, product_id, amount):
         return self.client.hincrby(
             self._format_key(product_id), 'in_stock', -amount)
+
+    def delete(self, product_id):
+        self.client.delete(self._format_key(product_id))
 
 
 class Storage(DependencyProvider):
