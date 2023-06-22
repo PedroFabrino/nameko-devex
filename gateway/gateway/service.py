@@ -10,8 +10,6 @@ from gateway.entrypoints import http
 from gateway.exceptions import OrderNotFound, ProductNotFound
 from gateway.schemas import CreateOrderSchema, GetOrderSchema, ProductSchema
 
-cached_product_ids = set()
-
 class GatewayService(object):
     """
     Service acts as a gateway to other services over http.
@@ -30,7 +28,6 @@ class GatewayService(object):
         """Gets product by `product_id`
         """
         product = self.products_rpc.get(product_id)
-        cached_product_ids.add(product_id)
         return Response(
             ProductSchema().dumps(product).data,
             mimetype='application/json'
@@ -175,9 +172,11 @@ class GatewayService(object):
         return Response(json.dumps({'id': id_}), mimetype='application/json')
 
     def _create_order(self, order_data):
-        # Retrieve the valid product IDs using the modified `list` method
-        valid_product_ids = cached_product_ids
+        product_ids = [item['product_id'] for item in order_data['order_details']]
+        products = self.products_rpc.list_with_ids(product_ids)
 
+        valid_product_ids = {item['id'] for item in products}
+        print("valid_product_ids", valid_product_ids)
         for item in order_data['order_details']:
             if item['product_id'] not in valid_product_ids:
                 raise ProductNotFound("Product Id {}".format(item['product_id']))
