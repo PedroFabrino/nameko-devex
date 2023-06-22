@@ -1,5 +1,4 @@
 import pytest
-
 from mock import call
 from nameko.exceptions import RemoteError
 
@@ -17,20 +16,21 @@ def order(db_session):
 
 @pytest.fixture
 def order_details(db_session, order):
-    db_session.add_all([
+    order_details = [
         OrderDetail(
             order=order, product_id="the_odyssey", price=99.51, quantity=1
         ),
         OrderDetail(
             order=order, product_id="the_enigma", price=30.99, quantity=8
         )
-    ])
+    ]
+    db_session.add_all(order_details)
     db_session.commit()
     return order_details
 
 
 def test_get_order(orders_rpc, order):
-    response = orders_rpc.get_order(1)
+    response = orders_rpc.get_order(order.id)
     assert response['id'] == order.id
 
 

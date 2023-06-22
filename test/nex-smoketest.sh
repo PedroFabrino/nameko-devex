@@ -49,6 +49,24 @@ ORDER_ID=$(
 echo ${ORDER_ID}
 ID=$(echo ${ORDER_ID} | jq '.id')
 
+# Test: List Orders
+echo "=== Listing Orders ==="
+curl -s "${STD_APP_URL}/orders?page=1&page_size=10" | jq .
+
 # Test: Get Order back
 echo "=== Getting Order ==="
 curl -s "${STD_APP_URL}/orders/${ID}" | jq .
+
+# Test: Delete Product
+echo "=== Deleting product id: the_odyssey ==="
+curl -s -XDELETE "${STD_APP_URL}/products/the_odyssey"
+echo
+
+# Test: Get Deleted Product
+echo "=== Getting product id: the_odyssey after deletion ==="
+response=$(curl -s -o /dev/null -w "%{http_code}" "${STD_APP_URL}/products/the_odyssey")
+if [ $response -eq 200 ]; then
+  echo "Product the_odyssey still exists after deletion"
+else
+  echo "Product the_odyssey successfully deleted"
+fi
