@@ -194,9 +194,9 @@ class GatewayService(object):
         """Lists all orders"""
         try:
             page = request.args.get("page", 1, type=int)
-            per_page = request.args.get("per_page", 10, type=int)
+            page_size = request.args.get("page_size", 10, type=int)
 
-            orders = self.orders_rpc.list_orders(page=page, per_page=per_page)
+            orders = self.orders_rpc.list_orders(page=page, page_size=page_size)
 
             order_schema = GetOrderSchema(many=True)
             serialized_orders = order_schema.dumps(orders).data
