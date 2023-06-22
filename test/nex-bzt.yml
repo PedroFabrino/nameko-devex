@@ -122,7 +122,7 @@ scenarios:
         not: false
     
     # 6. List Orders
-    - url: "/orders?page=1&page_size=50"
+    - url: "/orders?page=1&page_size=10"
       label: orders-list
       think-time: uniform(0s, 0s)
       method: GET
