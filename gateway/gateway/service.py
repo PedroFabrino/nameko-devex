@@ -102,28 +102,6 @@ class GatewayService(object):
             mimetype='application/json'
         )
 
-    # def _get_order(self, order_id):
-    #     # Retrieve order data from the orders service.
-    #     # Note - this may raise a remote exception that has been mapped to
-    #     # raise``OrderNotFound``
-    #     order = self.orders_rpc.get_order(order_id)
-
-    #     # Retrieve all products from the products service
-    #     product_map = {prod['id']: prod for prod in self.products_rpc.list()}
-
-    #     # get the configured image root
-    #     image_root = config['PRODUCT_IMAGE_ROOT']
-
-    #     # Enhance order details with product and image details.
-    #     for item in order['order_details']:
-    #         product_id = item['product_id']
-
-    #         item['product'] = product_map[product_id]
-    #         # Construct an image url.
-    #         item['image'] = '{}/{}.jpg'.format(image_root, product_id)
-
-    #     return order
-
     def _get_order(self, order_id):
         # Retrieve order data from the orders service.
         # Note - this may raise a remote exception that has been mapped to
@@ -215,10 +193,14 @@ class GatewayService(object):
     def list_orders(self, request):
         """Lists all orders"""
         try:
-            orders = self.orders_rpc.list_orders()
-            return Response(
-                GetOrderSchema(many=True).dumps(orders).data,
-                mimetype="application/json"
-            )
+            page = request.args.get("page", 1, type=int)
+            per_page = request.args.get("per_page", 10, type=int)
+
+            orders = self.orders_rpc.list_orders(page=page, per_page=per_page)
+
+            order_schema = GetOrderSchema(many=True)
+            serialized_orders = order_schema.dumps(orders).data
+
+            return Response(serialized_orders, mimetype="application/json")
         except Exception as e:
             raise e

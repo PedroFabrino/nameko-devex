@@ -33,11 +33,14 @@ def test_get_product_fails_on_not_found(service_container):
 
 
 def test_list_products(products, service_container):
-
     with entrypoint_hook(service_container, 'list') as list_:
         listed_products = list_()
+        
+    sorted_products = sorted(products, key=lambda p: p['id'])
+    sorted_listed_products = sorted(listed_products, key=lambda p: p['id'])
 
-    assert products == sorted(listed_products, key=lambda p: p['id'])
+    assert sorted_products == sorted_listed_products
+
 
 
 def test_list_productis_when_empty(service_container):
@@ -150,3 +153,26 @@ def test_handle_order_created(
     assert b'6' == product_one[b'in_stock']
     assert b'9' == product_two[b'in_stock']
     assert b'12' == product_three[b'in_stock']
+
+def test_delete_existing_product(product, redis_client, service_container):
+    # with entrypoint_hook(service_container, 'create') as create:
+    #     create(product)
+
+    product_id = product['id']
+    with entrypoint_hook(service_container, 'delete') as delete:
+        delete(product_id)
+
+    # Verify that the product is deleted
+    with pytest.raises(NotFound):
+        with entrypoint_hook(service_container, "get") as get:
+            get(product_id)
+
+
+def test_delete_nonexistent_product(product, redis_client, service_container):
+    # Try to delete a nonexistent product
+    product_id = "NONEXISTENT"
+    with entrypoint_hook(service_container, "delete") as delete:
+        result = delete(product_id)
+
+    # Verify the result
+    assert result is None

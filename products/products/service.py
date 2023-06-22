@@ -1,7 +1,8 @@
 import logging
 
+from marshmallow import ValidationError
 from nameko.events import event_handler
-from nameko.rpc import rpc, RpcProxy
+from nameko.rpc import rpc
 from nameko.web.handlers import http
 
 from products import dependencies, schemas
@@ -32,15 +33,18 @@ class ProductsService:
             logger.exception("Error occurred while getting product")
             return e
 
+
     @rpc
-    def list(self):
+    def list(self, page=1, page_size=10):
         try:
-            products = self.storage.list()
-            return schemas.Product(many=True).dump(products).data
+            # Perform pagination using SQLAlchemy's paginate function
+            products = self.storage.list_paginated(page, page_size)
+            
+            return products
         except Exception as e:
             logger.exception("Error occurred while listing products")
-            return 500, {"error": "An error occurred while listing the products"}
-        
+            raise e
+
     @rpc
     def list_ids(self):
         try:
@@ -64,6 +68,9 @@ class ProductsService:
         try:
             product = schemas.Product(strict=True).load(product).data
             self.storage.create(product)
+        except ValidationError as e:
+            logger.exception("Validation error occurred while creating product")
+            raise e
         except Exception as e:
             logger.exception("Error occurred while creating product")
             return 500, {"error": "An error occurred while creating the product"}

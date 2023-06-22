@@ -11,9 +11,9 @@ from orders.schemas import OrderSchema
 logger = logging.getLogger(__name__)
 class OrdersService:
     name = 'orders'
+    event_dispatcher = EventDispatcher()
 
     db = DatabaseSession(DeclarativeBase)
-    event_dispatcher = EventDispatcher()
 
     @rpc
     def get_order(self, order_id):
@@ -29,10 +29,27 @@ class OrdersService:
             raise e
             
     @rpc
-    def list_orders(self):
+    def list_orders(self, page=1, page_size=10):
         try:
-            orders = self.db.query(Order).all()
-            return OrderSchema(many=True).dump(orders).data
+            # Calculate the offset and limit based on the page and page_size
+            offset = (page - 1) * page_size
+            limit = page_size
+
+            # Query the orders with offset and limit
+            orders = self.db.query(Order).offset(offset).limit(limit).all()
+
+            # Get the total count of orders
+            total = self.db.query(Order).count()
+
+            # Create a dictionary to hold the paginated results
+            result = {
+                'total': total,
+                'page': page,
+                'page_size': page_size,
+                'orders': OrderSchema(many=True).dump(orders).data
+            }
+
+            return result
         except Exception as e:
             logger.exception("Error occurred while listing orders")
             raise e

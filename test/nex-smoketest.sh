@@ -51,7 +51,7 @@ ID=$(echo ${ORDER_ID} | jq '.id')
 
 # Test: List Orders
 echo "=== Listing Orders ==="
-curl -s "${STD_APP_URL}/orders" | jq .
+curl -s "${STD_APP_URL}/orders?page=1&page_size=10" | jq .
 
 # Test: Get Order back
 echo "=== Getting Order ==="
