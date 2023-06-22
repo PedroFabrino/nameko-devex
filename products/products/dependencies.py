@@ -44,22 +44,6 @@ class StorageWrapper:
             'maximum_speed': int(document['maximum_speed']) if document.get('maximum_speed') else None,
             'in_stock': int(document['in_stock']) if document.get('in_stock') else None
         }
-    
-    def _get_paginated_keys(self, page, page_size):
-        # Retrieve all product keys
-        keys = self.client.keys(self._format_key('*'))
-        # Calculate the start and end indices based on the pagination parameters
-        start = (page - 1) * page_size
-        end = start + page_size
-        # Return the paginated keys
-        return keys[start:end]
-
-    def list_paginated(self, page=1, page_size=10):
-        keys = self._get_paginated_keys(page, page_size)
-        products = []
-        for key in keys:
-            products.append(self._from_hash(self.client.hgetall(key)))
-        return products
 
     def get(self, product_id):
         product = self.client.hgetall(self._format_key(product_id))

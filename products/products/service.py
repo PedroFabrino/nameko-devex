@@ -35,25 +35,14 @@ class ProductsService:
 
 
     @rpc
-    def list(self, page=1, page_size=10):
+    def list(self):
         try:
             # Perform pagination using SQLAlchemy's paginate function
-            products = self.storage.list_paginated(page, page_size)
-            
-            return products
+            products = self.storage.list()            
+            return schemas.Product(many=True).dump(products).data
         except Exception as e:
             logger.exception("Error occurred while listing products")
             raise e
-
-    @rpc
-    def list_ids(self):
-        try:
-            products = self.storage.list()
-            valid_product_ids = [product['id'] for product in products]
-            return valid_product_ids
-        except Exception as e:
-            logger.exception("Error occurred while listing products")
-            return set()
 
     @rpc
     def list_with_ids(self, product_ids):
@@ -63,6 +52,7 @@ class ProductsService:
         except Exception as e:
             logger.exception("Error occurred while listing products")
             return 500, {"error": "An error occurred while listing the products"}
+
     @rpc
     def create(self, product):
         try:
