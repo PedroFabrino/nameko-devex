@@ -204,6 +204,24 @@ class TestCreateOrder(object):
             'order_details': []
         }
 
+        # setup mock products-service response:
+        gateway_service.products_rpc.list_with_ids.return_value = [
+            {
+                'id': 'the_odyssey',
+                'title': 'The Odyssey',
+                'maximum_speed': 3,
+                'in_stock': 899,
+                'passenger_capacity': 100
+            },
+            {
+                'id': 'the_enigma',
+                'title': 'The Enigma',
+                'maximum_speed': 200,
+                'in_stock': 1,
+                'passenger_capacity': 4
+            },
+        ]
+
         # call the gateway service to create the order
         response = web_session.post(
             '/orders',
